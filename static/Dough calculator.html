@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dough Calculator</title>
+<style>
+:root{--bg:#faf6ee;--ink:#2a2118;--mute:#7a6c5c;--line:#e3d9c7;--card:#fffdf8;--acc:#c8871a;--accInk:#fff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1610;--ink:#f3ead9;--mute:#a89984;--line:#3a3025;--card:#241d15;--acc:#e8a63a;--accInk:#1b1610}}
+:root[data-theme="dark"]{--bg:#1b1610;--ink:#f3ead9;--mute:#a89984;--line:#3a3025;--card:#241d15;--acc:#e8a63a;--accInk:#1b1610}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Georgia,"Times New Roman",serif}
+main{max-width:640px;margin:0 auto;padding:28px 18px 48px}
+h1{font-size:44px;line-height:1;margin:0 0 6px;letter-spacing:-.02em}
+.sub{color:var(--mute);margin:0 0 24px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+.row{margin-bottom:18px}
+.lab{display:flex;justify-content:space-between;font-family:system-ui,sans-serif;font-size:14px;margin-bottom:6px}
+.lab b{font-size:16px}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;padding:10px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;font:14px system-ui,sans-serif;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--acc);color:var(--accInk);border-color:var(--acc)}
+.gf{display:flex;align-items:center;gap:10px;font-family:system-ui,sans-serif;font-size:14px}
+.tip{display:none;margin-top:14px;padding:10px 12px;border-left:3px solid var(--acc);background:var(--bg);font:14px system-ui,sans-serif}
+.tip.show{display:block}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:18px 0}
+.stat{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--card)}
+.stat .n{font-size:32px;line-height:1.1}
+.stat .u{font:13px system-ui,sans-serif;color:var(--mute)}
+table{width:100%;border-collapse:collapse;font:15px system-ui,sans-serif}
+th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td:nth-child(n+2),th:nth-child(n+2){text-align:right}
+.isub{display:block;font-size:12px;color:var(--mute)}
+.iu{font-size:12px;color:var(--mute);margin-left:2px}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.pill{font:13px system-ui,sans-serif;border:1px solid var(--line);border-radius:20px;padding:3px 10px}
+.pill.hl{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btns{display:flex;gap:8px;margin-bottom:14px}
+.btns button{padding:10px 14px;border-radius:8px;border:1px solid var(--ink);background:transparent;color:var(--ink);font:14px system-ui,sans-serif;cursor:pointer}
+details{border-top:1px solid var(--line);padding-top:12px;font:15px system-ui,sans-serif}
+summary{cursor:pointer;font-weight:600}
+.step{display:flex;gap:12px;padding:6px 0}
+.step b{min-width:24px;color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+<main>
+<h1>Dough calculator</h1>
+<p class="sub">Set your size, quantity and thickness. Get exact weights.</p>
+
+<div class="panel">
+  <div class="row"><div class="lab"><span>Pizza size</span><b id="szD"></b></div>
+    <input id="ps" type="range" min="10" max="20" step="1" value="16" aria-label="Pizza size in inches"></div>
+  <div class="row"><div class="lab"><span>Number of pizzas</span><b id="qtD"></b></div>
+    <input id="pq" type="range" min="1" max="10" step="1" value="6" aria-label="Number of pizzas"></div>
+  <div class="row"><div class="lab"><span>Thickness</span></div>
+    <div class="seg" id="thick"></div></div>
+  <label class="gf"><input type="checkbox" id="gft"> Gluten free (GF flour + adjusted hydration)</label>
+  <div class="tip" id="ctip"><b id="clbl"></b>: <span id="ctxt"></span></div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="n" id="rball"></div><div class="u">grams each</div></div>
+  <div class="stat"><div class="n" id="rflour"></div><div class="u">grams total flour</div></div>
+  <div class="stat"><div class="n" id="rwater"></div><div class="u">grams total water</div></div>
+  <div class="stat"><div class="n" id="rhydr"></div><div class="u">percent hydration</div></div>
+</div>
+
+<table><thead><tr><th>Ingredient</th><th>Amount</th><th>Baker's %</th></tr></thead><tbody id="ibody"></tbody></table>
+<div class="pills"><span class="pill hl" id="ptype"></span><span class="pill" id="pferm"></span><span class="pill" id="pinfo"></span></div>
+<div class="btns"><button id="cpy">Copy recipe</button><button id="prt">Print / save</button></div>
+
+<details open><summary id="istit"></summary><div id="isbody"></div></details>
+</main>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var cT=2.11;
+  var TH=[["Thin",1.8],["Regular",2.11],["Thick",2.75]];
+  var seg=$("thick");
+  TH.forEach(function(t){var b=document.createElement("button");b.textContent=t[0];b.dataset.v=t[1];
+    b.onclick=function(){cT=parseFloat(b.dataset.v);calc()};seg.appendChild(b)});
+
+  function calc(){
+    var sz=parseFloat($("ps").value),qt=parseInt($("pq").value,10),gf=$("gft").checked;
+    $("szD").textContent=sz+'"';$("qtD").textContent=qt;
+    Array.prototype.forEach.call(seg.children,function(b){b.setAttribute("aria-pressed",parseFloat(b.dataset.v)===cT)});
+
+    var bF=gf?333*6:1509.797685*(480/425);
+    var dF=2550/1509.797685;
+    var fl=bF*Math.pow(sz/16,2)*(qt/6)*(cT/2.11);
+    var wP=gf?0.80:0.62;
+    var w=Math.round(fl*wP),y=fl*0.004,sa=Math.round(fl*0.025),su=Math.round(fl*0.02),oi=Math.round(fl*0.033);
+    var ball=Math.round((fl*dF)/qt);
+
+    $("rball").textContent=ball;$("rflour").textContent=Math.round(fl);
+    $("rwater").textContent=w;$("rhydr").textContent=Math.round(wP*100);
+
+    var tn=cT===1.8?"thin":cT===2.75?"thick":"regular";
+    $("pinfo").textContent=qt+" ball"+(qt>1?"s":"")+" \u00b7 "+sz+'" \u00b7 '+tn;
+    $("ptype").textContent=gf?"Gluten-free":"Regular dough";
+    $("pferm").textContent=gf?"Cold rest up to 48hrs":"Cold ferment 2\u20134 days";
+
+    var fn=gf?"GF flour":"Bread flour",fs=gf?"Caputo GF recommended":"12\u201314% protein";
+    function r(n,sub,amt,p){return "<tr><td>"+n+(sub?'<span class="isub">'+sub+"</span>":"")+'</td><td>'+amt+'<span class="iu">g</span></td><td><span class="isub">'+p+"</span></td></tr>"}
+    $("ibody").innerHTML=r(fn,fs,Math.round(fl),"100%")+r("Water","Cold, under 60\u00b0F",w,Math.round(wP*100)+"%")
+      +r("Yeast","Active dry",y.toFixed(1),"0.4%")+r("Salt","",sa,"2.5%")+r("Sugar","",su,"2%")+r("Olive oil","",oi,"3.3%");
+
+    var tip=$("ctip"),show=true,l,t;
+    if(gf){l="GF tip";t="GF dough is stickier \u2014 oil your hands before shaping."}
+    else if(sz>=18){l="Big pizza tip";t=sz+'" is large \u2014 preheat for the full 45 min at max temp.'}
+    else if(qt>=8){l="Batch tip";t="Making "+qt+" pizzas? Shape all balls at once \u2014 they keep 4 days in the fridge."}
+    else if(cT===2.75){l="Thick crust";t="Drop to 450\u00b0F and give it 10\u201312 min instead of 6\u20138."}
+    else if(cT===1.8){l="Thin crust";t="Thin crust cooks fast \u2014 4\u20135 minutes. Watch it closely."}
+    else show=false;
+    tip.classList.toggle("show",show);
+    if(show){$("clbl").textContent=l;$("ctxt").textContent=t}
+
+    var steps=gf?["Add cold water and yeast","Add GF flour + olive oil, mix 2 min","Add sugar and salt, mix 3\u20134 min","Refrigerate 15 min to firm up","Oil hands, shape into balls","Refrigerate up to 48 hours","Bring to room temp before using"]
+      :["Cool water to under 60\u00b0F","Mix water + active dry yeast","Add flour + olive oil, mix 2 min","Add sugar and salt on low","Mix 10 more minutes","Cover, rest 1\u20133 hours","Shape into balls, seal seam","Refrigerate 2\u20134 days (3 ideal)","Bring to room temp before using"];
+    $("istit").textContent=gf?"Gluten-free instructions":"Dough making instructions";
+    $("isbody").innerHTML=steps.map(function(s,i){return '<div class="step"><b>'+(i+1<10?"0":"")+(i+1)+"</b><span>"+s+"</span></div>"}).join("");
+  }
+
+  $("cpy").onclick=function(){
+    var t="DOUGH RECIPE\n"+$("qtD").textContent+"x "+$("szD").textContent+" pizza \u00b7 Dough ball: "+$("rball").textContent+"g\n\n";
+    document.querySelectorAll("#ibody tr").forEach(function(r){var c=r.querySelectorAll("td");t+=c[0].firstChild.textContent.trim()+": "+c[1].textContent.trim()+"\n"});
+    var b=$("cpy");
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){b.textContent="Copied"},function(){b.textContent="Copy failed"});
+    setTimeout(function(){b.textContent="Copy recipe"},2000);
+  };
+  $("prt").onclick=function(){window.print()};
+  $("ps").addEventListener("input",calc);$("pq").addEventListener("input",calc);$("gft").addEventListener("change",calc);
+  calc();
+})();
+</script>
+</body>
+</html>
