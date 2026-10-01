@@ -1,13 +1,37 @@
-# React + Vite
+# Latooka UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A dark, responsive React workspace built with Vite, BlueprintJS, and React Router.
 
-Currently, two official plugins are available:
+## Project structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```text
+src/
+	assets/       Brand marks and app icons
+	components/   Shared UI components, including navigation
+	constants/    Route paths and navigation data
+	context/      Reserved for shared React context as app-wide state is added
+	hooks/        Reusable stateful logic
+	layouts/      Shared app shell and navigation
+	pages/        Route-level screens
+	routes/       Route configuration
+	services/     Domain calculations and application services
+	styles/       Global and app-wide stylesheet entrypoints
+	utils/        Small pure formatting and helper functions
+	App.jsx       Router provider
+	main.jsx      Browser entry point
+```
 
-## React Compiler
+## Routes
+
+- `/` — Home (default)
+- `/about` — About / resume draft
+- `/portfolio` — Portfolio placeholder
+- `/recipes` — Recipes placeholder
+- `/tools/dough-calculator` — Dough calculator
+
+The route base is configured through Vite’s `base` setting for GitHub Pages deployment. A `public/404.html` redirect restores deep links on GitHub Pages.
+
+## Commands
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
